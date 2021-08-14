@@ -31,6 +31,7 @@ library
   build-depends:
       liquid-base
     , liquidhaskell
+    , rando
   default-language: Haskell2010
 
 executable closest-word-exe
@@ -42,6 +43,7 @@ executable closest-word-exe
       closest-word
     , liquid-base
     , liquidhaskell
+    , rando
   default-language: Haskell2010
 
 test-suite closest-word-test
@@ -56,4 +58,5 @@ test-suite closest-word-test
       closest-word
     , liquid-base
     , liquidhaskell
+    , rando
   default-language: Haskell2010
