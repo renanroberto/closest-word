@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Examples
+      NonTrivialExamples
   other-modules:
       Paths_closest_word
   hs-source-dirs:
