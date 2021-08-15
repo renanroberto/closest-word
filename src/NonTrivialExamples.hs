@@ -24,3 +24,10 @@ merge (x:xs) (y:ys)
 {-@ avg :: {v:[Int] | len v > 0} -> Int @-}
 avg :: [Int] -> Int
 avg xs = sum xs `div` length xs
+
+
+{-@ fib :: Nat -> Nat @-}
+fib :: Int -> Int
+fib 0 = 1
+fib 1 = 1
+fib n = fib (n - 2) + fib (n - 1)
