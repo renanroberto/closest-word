@@ -5,8 +5,42 @@ import           Data.Functor  ((<&>))
 import           Rando         (pickOne)
 
 
+{-@ type SizedWord N = {s:String | len s = N}  @-}
+
+{-@ type GameWord = SizedWord 5 @-}
+
+{-@ isGameWord :: s:String -> {b:Bool | b <=> len s = 5} @-}
+isGameWord :: String -> Bool
+isGameWord w = length w == 5
+
+{-@
+filter' :: forall <p :: a -> Bool, w :: a -> Bool -> Bool>.
+           {y :: a, b :: {v : Bool<w y> | v} |- {v:a | v == y} <: a<p>}
+           (x:a -> Bool<w x>) -> [a] -> [a<p>]
+@-}
+filter' :: (a -> Bool) -> [a] -> [a]
+filter' _ [] = []
+filter' p (x:xs) =
+  if p x then x : filter' p xs else filter' p xs
+
+{-@ filterGameWords :: [String] -> [GameWord] @-}
+filterGameWords :: [String] -> [String]
+filterGameWords ws = filter' isGameWord ws
+
+
 data Player = Player1 | Player2
   deriving (Eq, Show)
+
+
+{-@
+data GameState = GameState
+  { turn     :: Nat
+  , player   :: Player
+  , p1Points :: Float
+  , p2Points :: Float
+  , allWords :: [GameWord]
+  }
+@-}
 
 data GameState = GameState
   { turn     :: Int
@@ -15,8 +49,6 @@ data GameState = GameState
   , p2Points :: Float
   , allWords :: [String]
   } deriving Show
-
-{-@ type SizedWord N = {s:String | len s = N} @-}
 
 
 nextPlayer :: Player -> Player
@@ -32,7 +64,8 @@ hamming xs ys = go 0 xs ys
           | x == y = go acc xs ys
           | otherwise = go (acc + 1) xs ys
 
-{-@ getScore :: [SizedWord 5] -> SizedWord 5 -> {f:Float | f >= 0} @-}
+
+{-@ getScore :: [GameWord] -> GameWord -> {f:Float | f >= 0} @-}
 getScore :: [String] -> String -> Float
 getScore words word =
   words
@@ -42,13 +75,9 @@ getScore words word =
   & (\n -> if n == 0 then 2 else 1 / n)
 
 
-{-@ assume pickOneWord :: [String] -> IO (SizedWord 5) @-}
-pickOneWord :: [String] -> IO String
-pickOneWord = pickOne
-
-{-@ getWords :: Nat -> [String] -> IO [SizedWord 5] @-}
+{-@ getWords :: Nat -> [GameWord] -> IO [GameWord] @-}
 getWords :: Int -> [String] -> IO [String]
-getWords n = sequence . replicate n . pickOneWord
+getWords n = sequence . replicate n . pickOne
 
 game :: GameState -> IO ()
 game gs =
@@ -56,11 +85,10 @@ game gs =
     then play gs
     else endgame gs
 
-{-@ assume abs :: Num a => a -> {n:a | n >= 0} @-}
 {-@ lazy play @-}
 play :: GameState -> IO ()
 play gs = do
-  let wordsCount = abs ((turn gs) + 6)
+  let wordsCount = turn gs + 6
   pickedWords <- getWords wordsCount (allWords gs)
 
   putStrLn ""
@@ -117,13 +145,14 @@ endgame gs = do
 main :: IO ()
 main = do
   ws <- lines <$> readFile "wordlist_5.txt"
+  let ws' = filterGameWords ws
 
   let initialGame = GameState
         { turn = 1
         , player = Player1
         , p1Points = 0
         , p2Points = 0
-        , allWords = ws
+        , allWords = ws'
         }
 
   game initialGame
